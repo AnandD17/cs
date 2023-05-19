@@ -199,6 +199,10 @@ ylabel('Output Voltage (V)');
 title('μ-Law Companding Curve');
 % Add a legend
 legend('μ=1', 'μ=10', 'μ=50', 'μ=100', 'μ=255',"Location","best");
+
+
+
+pulse shaping
  %Define the pulse shape
 p_width = 10;
 p_amplitude = 1;
@@ -226,6 +230,9 @@ title('Rx Signal')
 subplot(3,1,3)
 plot(filtered_signal)
 title('Filtered Signal')
+
+
+  prob of error
 clear all
 N_bits = 1000; % number of bits to transmit
 EbNo_dB = 0:0.25:10; % SNR values in dB
@@ -257,6 +264,10 @@ xlabel ('Eb/No (dB)');
 ylabel ('Probability of Error');
 legend('Practical curve','Theoratical curve');
 grid on;
+
+
+
+
 Hoffman
 %Binary Huffman Code
 symbols = (1:5); % Alphabet vector
@@ -338,3 +349,87 @@ else
  display(code) %display final codeword
  e=e+1;
 end
+
+
+
+
+
+
+
+
+
+
+% Entropy in MATLAB
+
+clc;
+clear;
+close all;
+
+% Input Signal
+x = randi([0, 1], [1, 10000]); % Binary sequence
+
+% Probability Distribution
+p = [sum(x == 0), sum(x == 1)] / length(x);
+
+% Entropy Calculation
+H = -sum(p.*log2(p));
+
+% Plotting the results
+figure();
+subplot(2,1,1);
+stem(x(1:20));
+title('Binary Sequence (First 20 Samples)');
+xlabel('Sample Index');
+ylabel('Value');
+
+subplot(2,1,2);
+bar(p);
+title(['Probability Distribution (Entropy = ' num2str(H) ')']);
+xlabel('Symbol');
+ylabel('Probability');
+
+
+
+
+
+
+
+% Channel Estimation in MATLAB
+
+clc;
+clear;
+close all;
+
+% Input Signal
+t = linspace(0, 1, 1000); % Time axis
+f1 = 10; % Signal frequency
+f2 = 50;
+x = 2*sin(2*pi*f1*t) + 4*sin(2*pi*f2*t); % Input Signal
+
+% Channel Parameters
+h = [0.9, -0.3, 0.2]; % Channel impulse response
+n = 0.5*randn(size(x)); % Additive white Gaussian noise
+
+% Transmitted Signal
+s = conv(x, h, 'same'); % Convolution with channel impulse response
+y = s + n; % Received signal
+
+% Channel Estimation
+h_est = conv(y, fliplr(x), 'same') / sum(x.^2); % LMS channel estimation
+
+% Plotting the results
+figure();
+subplot(2,1,1);
+plot(t, s);
+title('Transmitted Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(2,1,2);
+plot(t, y);
+hold on;
+plot(t, conv(x, h_est, 'same'), 'r');
+title('Received Signal and Estimated Channel');
+xlabel('Time');
+ylabel('Amplitude');
+legend('Received Signal', 'Estimated Channel');
