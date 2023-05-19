@@ -1,0 +1,299 @@
+% Define the input signal and pulse shape
+t = linspace(0, 1, 1000); % Time vector
+input_signal = sin(2*pi*3*t) + 0.5*sin(2*pi*5*t) + 0.2*sin(2*pi*10*t); % Input signal
+pulse_shape = rectpuls(t-0.5, 0.1); % Rectangular pulse shape
+
+% Add noise to the input signal
+noise = 0.2*randn(size(input_signal)); % Gaussian noise
+noisy_signal = input_signal + noise; % Noisy signal
+
+% Apply pulse shape matched filter
+filtered_output = conv(noisy_signal, pulse_shape, 'same'); % Convolution of noisy signal and pulse shape
+
+% Plot the original signal, noisy signal, and filtered output
+subplot(3,1,1);
+plot(t, input_signal);
+title('Original Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3,1,2);
+plot(t, noisy_signal);
+title('Noisy Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(3,1,3);
+plot(t, filtered_output);
+title('Filtered Output');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+
+
+
+
+
+
+clear all
+N_bits = 1000; % number of bits to transmit
+EbNo_dB = 0:0.25:10; % EbNo values in dB
+Pe = zeros(size(EbNo_dB)); % initialize bit error rate vector
+
+bpskModulator = comm.BPSKModulator;
+bpskDemodulator = comm.BPSKDemodulator;
+channel = comm.AWGNChannel('NoiseMethod', 'Signal to noise ratio (Eb/No)', 'EbNo', 0);
+
+txData = randi([0 1], N_bits, 1); %Generate Data
+txSig = bpskModulator(txData); %Modulate data
+for i = 1:length(EbNo_dB)
+    channel.EbNo = EbNo_dB(i);
+    rxSig = channel(txSig);            % Pass through AWGN
+    rxData = bpskDemodulator(rxSig);       % Demodulate
+    err = comm.ErrorRate;
+    x = err(txData, rxData);
+    Pe(i) = x(2)/x(3);
+    PE(i) = mean(abs(txData - rxData));
+end
+
+scatterplot(rxSig)
+display(Pe)
+display(PE)
+%Pe = Pe./N_bits
+EbNo = 10.^(EbNo_dB/10);
+Pe_theoretical = (0.5)*erfc(sqrt(EbNo));
+semilogy(EbNo_dB, Pe, 'bo', EbNo_dB, Pe_theoretical, 'r-')
+semilogy(EbNo_dB, PE, 'bo', EbNo_dB, Pe_theoretical, 'r-')
+title ('Eb/No Vs Probabolity of Error');
+xlabel ('Eb/No (dB)');
+ylabel ('Probability of Error');
+legend('Practical curve','Theoratical curve');
+grid on
+
+
+
+
+
+
+
+clc;
+p=input('enter the probabilities:');
+n= length(p);
+symbols=[1:n];
+[dict,avglen]=huffmandict(symbols,p);
+temp=dict;
+t=dict;
+t=dict(:,2);
+for i=1:length(temp)
+    temp{i,2}=num2str(temp{i,2});
+end
+disp('the huffman code dict:');
+disp(temp)
+
+fprintf('enter the symbols between 1 to %d in[]',n);
+sym=input(':')
+encod=huffmanenco(sym,dict);
+disp('the encoded output:');
+disp(encod);
+bits=input('enter the bit stream in[];');
+decod=huffmandeco(bits,dict);
+disp(decod);
+
+
+H=0;
+Z=0;
+for(k=1:n)
+    H=H+(p(k)*log2(1/p(k)));
+end
+fprintf(1,'entropy is %f bits',H);
+N=H/avglen;
+fprintf('\n efficency is:%f',N);
+
+
+
+
+
+
+% Adaptive Delta Modulation (ADM) in MATLAB
+
+clc;
+clear;
+close all;
+
+% Input Signal
+t = linspace(0, 1, 1000); % Time axis
+f1 = 10; % Signal frequency
+f2 = 50;
+x = 2*sin(2*pi*f1*t) + 4*sin(2*pi*f2*t); % Input Signal
+
+% ADM Parameters
+step_size = 0.1; % Initial step size
+delta = zeros(size(x)); % Quantized signal
+y = zeros(size(x)); % Reconstructed signal
+
+for i = 2:length(x)
+    % Quantization
+    delta(i) = sign(x(i) - y(i-1))*step_size + delta(i-1);
+    
+    % Reconstruction
+    y(i) = delta(i) + y(i-1);
+    
+    % Step size adaptation
+    if abs(x(i) - y(i-1)) > step_size/2
+        step_size = step_size * 0.9;
+    else
+        step_size = step_size * 1.1;
+    end
+end
+
+% Plotting the results
+figure();
+subplot(3,1,1);
+plot(t, x);
+title('Input Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(3,1,2);
+plot(t, delta);
+title('Quantized Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(3,1,3);
+plot(t, y);
+title('Reconstructed Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Channel Estimation in MATLAB
+
+clc;
+clear;
+close all;
+
+% Input Signal
+t = linspace(0, 1, 1000); % Time axis
+f1 = 10; % Signal frequency
+f2 = 50;
+x = 2*sin(2*pi*f1*t) + 4*sin(2*pi*f2*t); % Input Signal
+
+% Channel Parameters
+h = [0.9, -0.3, 0.2]; % Channel impulse response
+n = 0.5*randn(size(x)); % Additive white Gaussian noise
+
+% Transmitted Signal
+s = conv(x, h, 'same'); % Convolution with channel impulse response
+y = s + n; % Received signal
+
+% Channel Estimation
+h_est = conv(y, fliplr(x), 'same') / sum(x.^2); % LMS channel estimation
+
+% Plotting the results
+figure();
+subplot(2,1,1);
+plot(t, s);
+title('Transmitted Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(2,1,2);
+plot(t, y);
+hold on;
+plot(t, conv(x, h_est, 'same'), 'r');
+title('Received Signal and Estimated Channel');
+xlabel('Time');
+ylabel('Amplitude');
+legend('Received Signal', 'Estimated Channel');
+
+
+
+
+
+
+% Companding in MATLAB
+clc;
+clear;
+close all;
+
+% Input Signal
+t = linspace(0, 1, 1000); % Time axis
+f1 = 10; % Signal frequency
+f2 = 50;
+x = 2*sin(2*pi*f1*t) + 4*sin(2*pi*f2*t); % Input Signal
+
+% Companding Parameters
+mu = 255; % Compression factor
+G = 1/mu; % Expansion factor
+companded_signal = zeros(size(x)); % Companded signal
+expanded_signal = zeros(size(x)); % Expanded signal
+
+% Companding
+for i = 1:length(x)
+    companded_signal(i) = sign(x(i)) * log(1 + mu*abs(x(i))) / log(1 + mu);
+end
+
+% Quantization
+delta = 2/mu;
+quantized_signal = delta * round(companded_signal/delta);
+
+% Expansion
+for i = 1:length(x)
+    expanded_signal(i) = sign(quantized_signal(i)) * (1/mu)*((1 + mu).^abs(quantized_signal(i)) - 1);
+end
+
+% Plotting the results
+figure();
+subplot(3,1,1);
+plot(t, x);
+title('Input Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(3,1,2);
+plot(t, companded_signal)
+
+
+
+
+
+% Entropy in MATLAB
+
+clc;
+clear;
+close all;
+
+% Input Signal
+x = randi([0, 1], [1, 10000]); % Binary sequence
+
+% Probability Distribution
+p = [sum(x == 0), sum(x == 1)] / length(x);
+
+% Entropy Calculation
+H = -sum(p.*log2(p));
+
+% Plotting the results
+figure();
+subplot(2,1,1);
+stem(x(1:20));
+title('Binary Sequence (First 20 Samples)');
+xlabel('Sample Index');
+ylabel('Value');
+
+subplot(2,1,2);
+bar(p);
+title(['Probability Distribution (Entropy = ' num2str(H) ')']);
+xlabel('Symbol');
+ylabel('Probability');
